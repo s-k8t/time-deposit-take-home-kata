@@ -1,27 +1,29 @@
 package org.ikigaidigital
 
-import java.math.BigDecimal
-import java.math.RoundingMode
+import org.ikigaidigital.extensions.roundToCents
+import org.ikigaidigital.models.PlanType
+import org.ikigaidigital.strategies.BasicPlanTypeStrategy
+import org.ikigaidigital.strategies.PlanTypeStrategy
+import org.ikigaidigital.strategies.PremiumPlanTypeStrategy
+import org.ikigaidigital.strategies.StudentPlanTypeStrategy
+import org.ikigaidigital.strategies.UndefinedPlanTypeStrategy
 
 class TimeDepositCalculator {
     fun updateBalance(xs: List<TimeDeposit>) {
-        for (i in xs.indices) {
-            var interest = 0.0
-            if (xs[i].days > 30) {
-                if (xs[i].planType == "student") {
-                    if (xs[i].days < 366) {
-                        interest += xs[i].balance * 0.03 / 12
-                    }
-                } else if (xs[i].planType == "premium") {
-                    if (xs[i].days > 45) {
-                        interest += xs[i].balance * 0.05 / 12
-                    }
-                } else if (xs[i].planType == "basic") {
-                    interest += xs[i].balance * 0.01 / 12
-                }
-            }
-            val a2d = BigDecimal(interest).setScale(2, RoundingMode.HALF_UP)
-            xs[i].balance += a2d.toDouble()
+        xs.forEach { deposit ->
+            val planType = PlanType.fromString(deposit.planType)
+            val interest = strategies.getValue(planType).calculateInterest(deposit)
+            deposit.balance += interest.roundToCents()
         }
     }
+
+    private val strategies: Map<PlanType, PlanTypeStrategy> =
+        PlanType.entries.associateWith { planType ->
+            when (planType) {
+                PlanType.BASIC -> BasicPlanTypeStrategy()
+                PlanType.STUDENT -> StudentPlanTypeStrategy()
+                PlanType.PREMIUM -> PremiumPlanTypeStrategy()
+                PlanType.UNDEFINED -> UndefinedPlanTypeStrategy()
+            }
+        }
 }

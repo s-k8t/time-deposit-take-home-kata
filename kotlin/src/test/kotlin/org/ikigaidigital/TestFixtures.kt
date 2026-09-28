@@ -1,7 +1,6 @@
 package org.ikigaidigital
 
-import java.math.BigDecimal
-import java.math.RoundingMode
+import org.ikigaidigital.extensions.roundToCents
 
 internal object TestFixtures {
     fun createBasicTimeDeposit() = TimeDeposit(id = 1, planType = "basic", balance = 10.00, days = 31)
@@ -13,5 +12,5 @@ internal object TestFixtures {
     fun expectedInterest(
         balance: Double,
         annualInterestRate: Double,
-    ): Double = (BigDecimal(balance * (annualInterestRate / 100) / 12).setScale(2, RoundingMode.HALF_UP)).toDouble()
+    ): Double = (balance * annualInterestRate / 12).roundToCents()
 }
