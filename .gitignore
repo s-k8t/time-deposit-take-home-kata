@@ -8,3 +8,6 @@ __pycache__/
 .idea/
 package-lock.json
 .vscode/
+.gradle/
+build/
+.kotlin/
