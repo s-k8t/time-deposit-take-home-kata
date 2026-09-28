@@ -12,5 +12,10 @@ internal object TestFixtures {
     fun expectedInterest(
         balance: Double,
         annualInterestRate: Double,
+    ): Double = balance * annualInterestRate / 12
+
+    fun expectedInterestRoundedToCents(
+        balance: Double,
+        annualInterestRate: Double,
     ): Double = (balance * annualInterestRate / 12).roundToCents()
 }

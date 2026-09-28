@@ -5,7 +5,7 @@ import org.ikigaidigital.strategies.PlanTypeStrategy.Companion.MONTHS_IN_YEAR
 import org.ikigaidigital.strategies.PlanTypeStrategy.Companion.ZERO_INTEREST_RATE
 
 internal class BasicPlanTypeStrategy : PlanTypeStrategy {
-    private companion object {
+    companion object {
         const val START_DAY = 31
         const val ANNUAL_INTEREST_RATE = 0.01
     }
