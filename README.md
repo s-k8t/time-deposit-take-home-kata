@@ -70,3 +70,43 @@ A junior developer implemented domain logic for a time deposit system but did no
 ### Submission Instructions
 - Provide clear instructions on how to trigger the endpoints using the Swagger contract.
 - Email the link to your public GitHub repository.
+
+---
+
+## Solution (Kotlin)
+
+The solution lives in the [`kotlin`](kotlin) module.
+
+### Tech Stack
+
+| Area | Technology |
+|---|---|
+| Language / runtime | Kotlin 2.4.10 on JVM 21 |
+| Build | Gradle 9.7 (Kotlin DSL), ktlint |
+| Framework | Spring Boot 4.0 (Spring Framework 7) |
+| Web | Spring WebFlux on Reactor Netty, Jackson 3 with the Kotlin module |
+| Concurrency | Kotlin coroutines (`kotlinx-coroutines-reactor`) |
+| Persistence | Spring Data R2DBC with `CoroutineCrudRepository`, `r2dbc-postgresql` driver, optimistic locking via `@Version` |
+| Database | PostgreSQL 17, schema migrations with Flyway |
+| API contract | OpenAPI 3 / Swagger UI via springdoc-openapi (WebFlux) |
+| Local environment | Docker Compose (started automatically by Spring Boot's Docker Compose support) |
+| Testing | JUnit 6, AssertJ, MockK + springmockk, `kotlinx-coroutines-test`, WebTestClient, Testcontainers (PostgreSQL) |
+
+### Non-Blocking, Top to Bottom
+
+Every layer of a request is non-blocking. Coroutines suspend instead of holding a thread while waiting for I/O:
+
+```
+HTTP request
+  └─ Reactor Netty (WebFlux event loop)
+      └─ TimeDepositQueryController      suspend fun  (implements the api facade)
+          └─ GetTimeDepositsService      suspend fun
+              └─ Store (data source)     suspend fun
+                  └─ CoroutineCrudRepository  →  Flow<Entity>
+                      └─ R2DBC driver  →  PostgreSQL
+```
+
+- **Web layer:** WebFlux runs `suspend` controller functions natively, so no servlet thread is held per request.
+- **Service and data layers:** `suspend` all the way down. Nothing calls blocking code or needs `withContext(Dispatchers.IO)`.
+- **Persistence:** R2DBC talks to PostgreSQL with a reactive, non-blocking protocol. Repository results come back as `Flow` and are collected with `toList()`.
+- **The one blocking part:** Flyway runs its migrations over JDBC once, at startup, before the application accepts traffic.
