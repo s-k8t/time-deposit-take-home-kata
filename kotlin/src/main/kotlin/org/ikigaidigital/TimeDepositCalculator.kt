@@ -1,12 +1,12 @@
 package org.ikigaidigital
 
-import org.ikigaidigital.extensions.roundToCents
-import org.ikigaidigital.models.PlanType
-import org.ikigaidigital.strategies.BasicPlanTypeStrategy
-import org.ikigaidigital.strategies.PlanTypeStrategy
-import org.ikigaidigital.strategies.PremiumPlanTypeStrategy
-import org.ikigaidigital.strategies.StudentPlanTypeStrategy
-import org.ikigaidigital.strategies.UndefinedPlanTypeStrategy
+import org.ikigaidigital.domain.PlanType
+import org.ikigaidigital.extension.roundToCents
+import org.ikigaidigital.strategy.BasicPlanTypeStrategy
+import org.ikigaidigital.strategy.PlanTypeStrategy
+import org.ikigaidigital.strategy.PremiumPlanTypeStrategy
+import org.ikigaidigital.strategy.StudentPlanTypeStrategy
+import org.ikigaidigital.strategy.UndefinedPlanTypeStrategy
 
 class TimeDepositCalculator {
     fun updateBalance(xs: List<TimeDeposit>) {

@@ -1,11 +1,12 @@
 package org.ikigaidigital
 
 import org.assertj.core.api.Assertions.assertThat
+import org.ikigaidigital.TestFixtures.createTimeDeposit
 import org.ikigaidigital.TestFixtures.expectedInterestRoundedToCents
-import org.ikigaidigital.models.PlanType
-import org.ikigaidigital.strategies.BasicPlanTypeStrategy
-import org.ikigaidigital.strategies.PremiumPlanTypeStrategy
-import org.ikigaidigital.strategies.StudentPlanTypeStrategy
+import org.ikigaidigital.domain.PlanType
+import org.ikigaidigital.strategy.BasicPlanTypeStrategy
+import org.ikigaidigital.strategy.PremiumPlanTypeStrategy
+import org.ikigaidigital.strategy.StudentPlanTypeStrategy
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
@@ -22,7 +23,7 @@ internal class TimeDepositCalculatorTest {
         annualInterestRate: Double,
     ) {
         // prepare
-        val deposit = TimeDeposit(id = 1, planType = planType, balance = 10.00, days = 46)
+        val deposit = createTimeDeposit(planType = planType, days = 46)
         val expectedDeposit =
             deposit.copy(
                 balance =
@@ -52,7 +53,7 @@ internal class TimeDepositCalculatorTest {
         days: Int,
     ) {
         // prepare
-        val deposit = TimeDeposit(id = 1, planType = planType, balance = 10.00, days = days)
+        val deposit = createTimeDeposit(planType = planType, days = days)
         val expectedDeposit = deposit.copy()
 
         // execute
@@ -69,7 +70,7 @@ internal class TimeDepositCalculatorTest {
     @ValueSource(strings = ["", "other", "Basic", "STUDENT"])
     fun `should not add interest when plan type is unknown`(planType: String) {
         // prepare
-        val deposit = TimeDeposit(id = 1, planType = planType, balance = 10.00, days = 46)
+        val deposit = createTimeDeposit(planType = planType, days = 46)
         val expectedDeposit = deposit.copy()
 
         // execute
