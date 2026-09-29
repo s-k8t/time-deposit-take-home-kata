@@ -111,6 +111,58 @@ HTTP request
 - **Persistence:** R2DBC talks to PostgreSQL with a reactive, non-blocking protocol. Repository results come back as `Flow` and are collected with `toList()`.
 - **The one blocking part:** Flyway runs its migrations over JDBC once, at startup, before the application accepts traffic.
 
+### API Endpoints
+
+Both endpoints are under `/v1/deposits`, and the OpenAPI contract is generated from the code (see below). Neither endpoint takes parameters or a request body.
+
+| Method | Path | Success | Purpose |
+|---|---|---|---|
+| `GET` | `/v1/deposits` | `200 OK` | List all time deposits with their withdrawals |
+| `POST` | `/v1/deposits/balances` | `204 No Content` | Apply one month of interest to every time deposit |
+
+#### `GET /v1/deposits`
+
+Returns every time deposit, ordered by `id`. An empty database returns `[]`.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | integer | Time deposit id |
+| `planType` | string | `BASIC`, `STUDENT`, `PREMIUM`, or `UNDEFINED` for any plan type not recognised in the database |
+| `balance` | number | Current balance |
+| `days` | integer | Age of the deposit in days |
+| `withdrawals` | array | The deposit's withdrawals, ordered by `date`; `[]` if there are none |
+| `withdrawals[].id` | integer | Withdrawal id |
+| `withdrawals[].amount` | number | Withdrawn amount |
+| `withdrawals[].date` | string | Withdrawal date, ISO-8601 (`YYYY-MM-DD`) |
+
+```json
+[
+  {
+    "id": 1,
+    "planType": "BASIC",
+    "balance": 1234.56,
+    "days": 45,
+    "withdrawals": [{ "id": 1, "amount": 100.0, "date": "2026-09-01" }]
+  }
+]
+```
+
+#### `POST /v1/deposits/balances`
+
+Recalculates and stores the balance of every time deposit by adding one month of interest, according to its plan:
+
+| Plan | Annual rate | Interest is applied when |
+|---|---|---|
+| Basic | 1% | `days` ≥ 31 |
+| Student | 3% | 31 ≤ `days` ≤ 365 (none after one year) |
+| Premium | 5% | `days` ≥ 46 |
+| Any other plan type | none | never |
+
+Monthly interest is `balance × annual rate / 12`, rounded half-up to cents.
+
+- **Not idempotent:** every call applies another month of interest. That's why it's a `POST`.
+- **Concurrent changes are never overwritten:** each deposit is updated only if it still has the version read at the start of the calculation. A deposit modified in the meantime keeps that change and is skipped in this run.
+
 ### Calling the Endpoints via Swagger
 
 **Prerequisites:** JDK 21 and a running Docker daemon.
