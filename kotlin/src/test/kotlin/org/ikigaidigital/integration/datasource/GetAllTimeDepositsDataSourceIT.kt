@@ -1,4 +1,4 @@
-package org.ikigaidigital.query.integration.datasource
+package org.ikigaidigital.integration.datasource
 
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -7,7 +7,7 @@ import org.ikigaidigital.TestFixtures.createTimeDepositOutput
 import org.ikigaidigital.TestFixtures.createWithdrawalEntity
 import org.ikigaidigital.TestFixtures.createWithdrawalOutput
 import org.ikigaidigital.TestcontainersConfiguration
-import org.ikigaidigital.domain.PlanType
+import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource
 import org.ikigaidigital.store.Store
 import org.ikigaidigital.store.repository.TimeDepositRepository
@@ -39,7 +39,7 @@ internal class GetAllTimeDepositsDataSourceIT(
     fun `should return empty list when no time deposits exist`() =
         runTest {
             // execute
-            val result = sut.fetAllDeposits()
+            val result = sut.fetchAllDeposits()
 
             // verify
             assertThat(result).isEmpty()
@@ -83,7 +83,7 @@ internal class GetAllTimeDepositsDataSourceIT(
                 )
 
             // execute
-            val result = sut.fetAllDeposits()
+            val result = sut.fetchAllDeposits()
 
             // verify
             assertThat(result).isEqualTo(expected)

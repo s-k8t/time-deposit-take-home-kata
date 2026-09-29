@@ -1,4 +1,4 @@
-package org.ikigaidigital.domain
+package org.ikigaidigital.model
 
 enum class PlanType(
     val code: String,

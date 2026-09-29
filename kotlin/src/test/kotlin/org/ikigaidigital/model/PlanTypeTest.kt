@@ -1,4 +1,4 @@
-package org.ikigaidigital.domain
+package org.ikigaidigital.model
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest

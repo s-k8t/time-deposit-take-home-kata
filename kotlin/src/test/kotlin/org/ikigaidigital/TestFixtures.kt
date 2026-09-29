@@ -8,8 +8,10 @@ import org.ikigaidigital.api.model.TimeDepositResponse
 import org.ikigaidigital.api.model.WithdrawalDate
 import org.ikigaidigital.api.model.WithdrawalId
 import org.ikigaidigital.api.model.WithdrawalResponse
-import org.ikigaidigital.domain.PlanType
+import org.ikigaidigital.command.datasource.GetTimeDepositsDataSource
+import org.ikigaidigital.command.datasource.UpdateTimeDepositBalanceDataSource
 import org.ikigaidigital.extension.roundToCents
+import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource.Output
 import org.ikigaidigital.store.entity.TimeDepositEntity
 import org.ikigaidigital.store.entity.WithdrawalEntity
@@ -18,15 +20,31 @@ import java.time.LocalDate
 
 internal object TestFixtures {
     fun createTimeDeposit(
+        id: Int = 1,
         planType: String = PlanType.BASIC.code,
+        balance: Double = 10.00,
         days: Int = 31,
-    ) = TimeDeposit(id = 1, planType = planType, balance = 10.00, days = days)
+    ) = TimeDeposit(id = id, planType = planType, balance = balance, days = days)
 
     fun createBasicTimeDeposit() = createTimeDeposit(planType = PlanType.BASIC.code)
 
     fun createStudentTimeDeposit() = createTimeDeposit(planType = PlanType.STUDENT.code)
 
     fun createPremiumTimeDeposit() = createTimeDeposit(planType = PlanType.PREMIUM.code)
+
+    fun createTimeDepositToCalculate(
+        id: Int = 1,
+        planType: String = PlanType.BASIC.code,
+        balance: Double = 1234.56,
+        days: Int = 45,
+        version: Long = 0,
+    ) = GetTimeDepositsDataSource.Output(id = id, planType = planType, balance = balance, days = days, version = version)
+
+    fun createBalanceUpdate(
+        id: Int = 1,
+        balance: Double = 1234.56,
+        version: Long = 0,
+    ) = UpdateTimeDepositBalanceDataSource.Input(id = id, balance = balance, version = version)
 
     fun createTimeDepositEntity(
         planType: String = PlanType.BASIC.code,

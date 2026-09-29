@@ -1,0 +1,5 @@
+ALTER TABLE time_deposits
+    ADD COLUMN version BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE withdrawals
+    ADD COLUMN version BIGINT NOT NULL DEFAULT 0;

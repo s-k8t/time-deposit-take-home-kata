@@ -24,7 +24,7 @@ internal class GetTimeDepositsServiceTest(
     fun `should map all time deposits with withdrawals to responses when time deposits exist`() =
         runTest {
             // prepare
-            coEvery { getAllTimeDepositsDataSource.fetAllDeposits() } returns listOf(createTimeDepositOutput())
+            coEvery { getAllTimeDepositsDataSource.fetchAllDeposits() } returns listOf(createTimeDepositOutput())
             val expected = listOf(createTimeDepositResponse())
 
             // execute
@@ -47,7 +47,7 @@ internal class GetTimeDepositsServiceTest(
         expectedPlanTypeName: PlanTypeName,
     ) = runTest {
         // prepare
-        coEvery { getAllTimeDepositsDataSource.fetAllDeposits() } returns listOf(createTimeDepositOutput(planType = storedPlanType))
+        coEvery { getAllTimeDepositsDataSource.fetchAllDeposits() } returns listOf(createTimeDepositOutput(planType = storedPlanType))
 
         // execute
         val result = sut.getTimeDeposits()
@@ -60,7 +60,7 @@ internal class GetTimeDepositsServiceTest(
     fun `should return empty list when no time deposits exist`() =
         runTest {
             // prepare
-            coEvery { getAllTimeDepositsDataSource.fetAllDeposits() } returns emptyList()
+            coEvery { getAllTimeDepositsDataSource.fetchAllDeposits() } returns emptyList()
 
             // execute
             val result = sut.getTimeDeposits()

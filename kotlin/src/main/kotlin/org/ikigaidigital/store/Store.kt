@@ -1,25 +1,42 @@
 package org.ikigaidigital.store
 
 import kotlinx.coroutines.flow.toList
+import org.ikigaidigital.command.datasource.GetTimeDepositsDataSource
+import org.ikigaidigital.command.datasource.UpdateTimeDepositBalanceDataSource
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource
 import org.ikigaidigital.store.entity.TimeDepositEntity
 import org.ikigaidigital.store.entity.WithdrawalEntity
 import org.ikigaidigital.store.repository.TimeDepositRepository
 import org.ikigaidigital.store.repository.WithdrawalRepository
 import org.springframework.stereotype.Component
+import java.math.BigDecimal
 
 @Component
 internal class Store(
     private val timeDepositRepository: TimeDepositRepository,
     private val withdrawalRepository: WithdrawalRepository,
-) : GetAllTimeDepositsDataSource {
-    override suspend fun fetAllDeposits(): List<GetAllTimeDepositsDataSource.Output> {
+) : GetAllTimeDepositsDataSource,
+    GetTimeDepositsDataSource,
+    UpdateTimeDepositBalanceDataSource {
+    override suspend fun fetchAllDeposits(): List<GetAllTimeDepositsDataSource.Output> {
         val withdrawalsByTimeDepositId = withdrawalRepository.findAll().toList().groupBy { it.timeDepositId }
         return timeDepositRepository
             .findAll()
             .toList()
             .sortedBy { it.id }
             .map { it.toOutput(withdrawalsByTimeDepositId[it.id].orEmpty()) }
+    }
+
+    override suspend fun fetchTimeDeposits(): List<GetTimeDepositsDataSource.Output> =
+        timeDepositRepository
+            .findAll()
+            .toList()
+            .map { it.toTimeDepositOutput() }
+
+    override suspend fun updateBalances(inputs: List<UpdateTimeDepositBalanceDataSource.Input>) {
+        inputs.forEach { input ->
+            timeDepositRepository.updateBalance(input.id, BigDecimal.valueOf(input.balance), input.version)
+        }
     }
 
     private fun TimeDepositEntity.toOutput(withdrawals: List<WithdrawalEntity>) =
@@ -36,5 +53,14 @@ internal class Store(
             id = id,
             amount = amount.toDouble(),
             date = date,
+        )
+
+    private fun TimeDepositEntity.toTimeDepositOutput() =
+        GetTimeDepositsDataSource.Output(
+            id = id,
+            planType = planType,
+            balance = balance.toDouble(),
+            days = days,
+            version = checkNotNull(version),
         )
 }

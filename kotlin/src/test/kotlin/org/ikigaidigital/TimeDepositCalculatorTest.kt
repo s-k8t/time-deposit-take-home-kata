@@ -3,10 +3,10 @@ package org.ikigaidigital
 import org.assertj.core.api.Assertions.assertThat
 import org.ikigaidigital.TestFixtures.createTimeDeposit
 import org.ikigaidigital.TestFixtures.expectedInterestRoundedToCents
-import org.ikigaidigital.domain.PlanType
-import org.ikigaidigital.strategy.BasicPlanTypeStrategy
-import org.ikigaidigital.strategy.PremiumPlanTypeStrategy
-import org.ikigaidigital.strategy.StudentPlanTypeStrategy
+import org.ikigaidigital.command.service.strategy.BasicPlanTypeStrategy
+import org.ikigaidigital.command.service.strategy.PremiumPlanTypeStrategy
+import org.ikigaidigital.command.service.strategy.StudentPlanTypeStrategy
+import org.ikigaidigital.model.PlanType
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource

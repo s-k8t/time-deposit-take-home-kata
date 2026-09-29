@@ -17,5 +17,5 @@ internal interface GetAllTimeDepositsDataSource {
         )
     }
 
-    suspend fun fetAllDeposits(): List<Output>
+    suspend fun fetchAllDeposits(): List<Output>
 }

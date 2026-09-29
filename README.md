@@ -110,3 +110,89 @@ HTTP request
 - **Service and data layers:** `suspend` all the way down. Nothing calls blocking code or needs `withContext(Dispatchers.IO)`.
 - **Persistence:** R2DBC talks to PostgreSQL with a reactive, non-blocking protocol. Repository results come back as `Flow` and are collected with `toList()`.
 - **The one blocking part:** Flyway runs its migrations over JDBC once, at startup, before the application accepts traffic.
+
+### Calling the Endpoints via Swagger
+
+**Prerequisites:** JDK 21 and a running Docker daemon.
+
+**1. Start the application**
+
+```bash
+cd kotlin
+./gradlew bootRun
+```
+
+Spring Boot starts PostgreSQL from `compose.yaml`, Flyway creates the schema, and the API listens on port `8080`. If that port is taken, run `./gradlew bootRun --args='--server.port=8081'` and use `8081` in the URLs below.
+
+**2. Add sample data**
+
+There is no endpoint for creating deposits, and the database starts empty. In a second terminal:
+
+```bash
+cd kotlin
+docker compose exec -T postgres psql -U time_deposit -d time_deposits <<'SQL'
+INSERT INTO time_deposits (plan_type, days, balance) VALUES
+  ('basic', 45, 1234.56), ('student', 200, 5000.00), ('premium', 90, 10000.00);
+INSERT INTO withdrawals (time_deposit_id, amount, date)
+  SELECT id, 100.00, DATE '2026-09-01' FROM time_deposits WHERE plan_type = 'basic';
+SQL
+```
+
+**3. Open Swagger UI** at <http://localhost:8080/swagger-ui.html>. Both endpoints are listed under **Time deposits**. The raw OpenAPI contract is at <http://localhost:8080/v3/api-docs>.
+
+**4. Get all time deposits:** expand **`GET /v1/deposits`**, click **Try it out**, then **Execute**. The response is `200` with every deposit and its withdrawals:
+
+```json
+[
+  {
+    "id": 1,
+    "planType": "BASIC",
+    "balance": 1234.56,
+    "days": 45,
+    "withdrawals": [{ "id": 1, "amount": 100.0, "date": "2026-09-01" }]
+  },
+  { "id": 2, "planType": "STUDENT", "balance": 5000.0, "days": 200, "withdrawals": [] },
+  { "id": 3, "planType": "PREMIUM", "balance": 10000.0, "days": 90, "withdrawals": [] }
+]
+```
+
+**5. Update all balances:** expand **`POST /v1/deposits/balances`**, click **Try it out**, then **Execute**. It takes no request body and returns `204 No Content`. One month of interest is applied to every eligible deposit, in a single transaction.
+
+**6. Check the result:** execute `GET /v1/deposits` again. The balances are now `1235.59` (basic), `5012.5` (student) and `10041.67` (premium). Each further `POST` applies another month of interest.
+
+The same calls without Swagger:
+
+```bash
+curl http://localhost:8080/v1/deposits
+curl -X POST http://localhost:8080/v1/deposits/balances
+```
+
+Stopping the application (`Ctrl+C`) also stops the PostgreSQL container, but keeps it, so the data is still there on the next `bootRun`. Step 2 is only needed once. To start again from an empty database, run `docker compose down` in `kotlin/`.
+
+### AI-Assisted Development
+
+#### Tools and Setup
+
+| Tool | Role |
+|---|---|
+| [Claude Code](https://claude.com/claude-code) (CLI) with Claude Opus 5.5 | Coding agent: reads the codebase, edits files, runs Gradle, Docker and the tests, and reports the results |
+| IntelliJ IDEA | Reviewing every change, running tests, and my own edits alongside the agent |
+| Gradle build, ktlint, Testcontainers | Guardrails: every change had to pass `./gradlew build` (style and all tests against a real PostgreSQL) before it was accepted |
+
+**Reproducing the setup:**
+
+1. Install Claude Code: `npm install -g @anthropic-ai/claude-code`.
+2. Run `claude` in the repository root.
+3. Claude Code loads [`CLAUDE.md`](CLAUDE.md) automatically. It holds the project's custom rules: the shared-class constraints, package layout, non-blocking stack, code style, and test conventions.
+
+No other system prompts, plugins or agent frameworks were used.
+
+#### How It Was Used
+
+I led the design, and the agent executed it in small steps:
+
+- **I decided the structure and conventions:** the query/command split and package layout, the facades, the value classes and enums in `api.model`, the REST paths, and the test style. Each decision became a rule in `CLAUDE.md`, so later steps followed it without being reminded.
+- **The implementation was done by me.** The agent's first drafts were rewritten or removed when they didn't fit the design.
+- **The agent implemented missing tests**, covering the existing calculation logic before refactoring and each new layer as it was added.
+- **The agent asked before decisions with trade-offs**, for example Spring Data JDBC vs R2DBC when moving to coroutines, or moving the shared `TimeDeposit` class, which the brief protects. It flagged problems in my own edits, such as a plan-type fixture that silently mapped to `UNDEFINED`.
+- **Findings were checked, not assumed.** For example, the transaction rollback test was confirmed to fail when `@Transactional` is removed, and the Swagger instructions above were followed against the running application.

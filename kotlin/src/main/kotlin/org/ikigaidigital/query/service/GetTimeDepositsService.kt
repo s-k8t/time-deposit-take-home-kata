@@ -8,5 +8,5 @@ import org.springframework.stereotype.Service
 internal class GetTimeDepositsService(
     private val getAllTimeDepositsDataSource: GetAllTimeDepositsDataSource,
 ) {
-    suspend fun getTimeDeposits(): List<TimeDepositResponse> = getAllTimeDepositsDataSource.fetAllDeposits().map { it.toResponse() }
+    suspend fun getTimeDeposits(): List<TimeDepositResponse> = getAllTimeDepositsDataSource.fetchAllDeposits().map { it.toResponse() }
 }

@@ -1,4 +1,4 @@
-package org.ikigaidigital.strategy
+package org.ikigaidigital.command.service.strategy
 
 import org.ikigaidigital.TimeDeposit
 

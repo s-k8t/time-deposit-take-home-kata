@@ -1,9 +1,9 @@
-package org.ikigaidigital.strategy
+package org.ikigaidigital.command.service.strategy
 
 import org.assertj.core.api.Assertions.assertThat
 import org.ikigaidigital.TestFixtures.createStudentTimeDeposit
 import org.ikigaidigital.TestFixtures.expectedInterest
-import org.ikigaidigital.strategy.PlanTypeStrategy.Companion.ZERO_INTEREST_RATE
+import org.ikigaidigital.command.service.strategy.PlanTypeStrategy.Companion.ZERO_INTEREST_RATE
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 

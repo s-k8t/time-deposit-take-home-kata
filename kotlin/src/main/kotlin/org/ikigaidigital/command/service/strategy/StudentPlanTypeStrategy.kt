@@ -1,8 +1,8 @@
-package org.ikigaidigital.strategy
+package org.ikigaidigital.command.service.strategy
 
 import org.ikigaidigital.TimeDeposit
-import org.ikigaidigital.strategy.PlanTypeStrategy.Companion.MONTHS_IN_YEAR
-import org.ikigaidigital.strategy.PlanTypeStrategy.Companion.ZERO_INTEREST_RATE
+import org.ikigaidigital.command.service.strategy.PlanTypeStrategy.Companion.MONTHS_IN_YEAR
+import org.ikigaidigital.command.service.strategy.PlanTypeStrategy.Companion.ZERO_INTEREST_RATE
 
 internal class StudentPlanTypeStrategy : PlanTypeStrategy {
     companion object {

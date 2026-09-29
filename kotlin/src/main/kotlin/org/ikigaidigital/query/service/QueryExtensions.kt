@@ -8,7 +8,7 @@ import org.ikigaidigital.api.model.TimeDepositResponse
 import org.ikigaidigital.api.model.WithdrawalDate
 import org.ikigaidigital.api.model.WithdrawalId
 import org.ikigaidigital.api.model.WithdrawalResponse
-import org.ikigaidigital.domain.PlanType
+import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource
 
 internal fun GetAllTimeDepositsDataSource.Output.toResponse() =

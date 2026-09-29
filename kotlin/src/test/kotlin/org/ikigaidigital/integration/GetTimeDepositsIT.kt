@@ -1,10 +1,10 @@
-package org.ikigaidigital.query.integration
+package org.ikigaidigital.integration
 
 import kotlinx.coroutines.test.runTest
 import org.ikigaidigital.TestFixtures.createTimeDepositEntity
 import org.ikigaidigital.TestFixtures.createWithdrawalEntity
 import org.ikigaidigital.TestcontainersConfiguration
-import org.ikigaidigital.domain.PlanType
+import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.store.repository.TimeDepositRepository
 import org.ikigaidigital.store.repository.WithdrawalRepository
 import org.junit.jupiter.api.AfterEach
