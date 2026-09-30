@@ -9,8 +9,12 @@ import java.time.LocalDate
 internal class GetTimeDepositsService(
     private val getAllTimeDepositsDataSource: GetAllTimeDepositsDataSource,
 ) {
-    suspend fun getTimeDeposits(): List<TimeDepositResponse> {
+    suspend fun getTimeDeposits(
+        page: Int?,
+        size: Int?,
+    ): List<TimeDepositResponse> {
         val today = LocalDate.now()
-        return getAllTimeDepositsDataSource.fetchAllDeposits().map { it.toResponse(today) }
+        val requestedPage = size?.let { GetAllTimeDepositsDataSource.Page(number = page ?: 0, size = it) }
+        return getAllTimeDepositsDataSource.fetchAllDeposits(requestedPage).map { it.toResponse(today) }
     }
 }

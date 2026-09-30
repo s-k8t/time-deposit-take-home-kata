@@ -130,7 +130,7 @@ Column names are snake_case (`plan_type`, `time_deposit_id`, `start_date`), whic
 
 ### API Endpoints
 
-Both endpoints are under `/v1/deposits`, and the OpenAPI contract is generated from the code (see below). Neither endpoint takes parameters or a request body.
+Both endpoints are under `/v1/deposits`, and the OpenAPI contract is generated from the code (see below). Neither endpoint takes a request body; the `GET` accepts optional pagination parameters.
 
 | Method | Path | Success | Purpose |
 |---|---|---|---|
@@ -140,6 +140,15 @@ Both endpoints are under `/v1/deposits`, and the OpenAPI contract is generated f
 #### `GET /v1/deposits`
 
 Returns every time deposit, ordered by `id`. An empty database returns `[]`.
+
+**Optional pagination.** Returning every deposit loads the whole table into memory, which doesn't scale to a real bank's portfolio. The endpoint therefore accepts two optional query parameters. Without them it still returns all deposits, as the brief requires.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `size` | integer | Page size. When omitted, all time deposits are returned. |
+| `page` | integer | Zero-based page number, used only together with `size`. Defaults to `0`. |
+
+For example, `GET /v1/deposits?page=1&size=50` returns deposits 51–100 in `id` order. Paging is done in the database (`ORDER BY id LIMIT … OFFSET …`), and withdrawals are loaded only for the deposits on the page. The response is still a plain JSON array, so it carries no total count; a client knows it has reached the last page when it gets fewer than `size` items.
 
 | Field | Type | Description |
 |---|---|---|
@@ -236,7 +245,7 @@ curl http://localhost:8080/v1/deposits
 curl -X POST http://localhost:8080/v1/deposits/balances
 ```
 
-In IntelliJ IDEA, open [`get-time-deposits.http`](kotlin/src/test/resources/http/get-time-deposits.http) or [`calculate-balance.http`](kotlin/src/test/resources/http/calculate-balance.http) in `kotlin/src/test/resources/http/`, select the `local` environment, and click ▶ next to the request. `baseUrl` is defined in `http-client.env.json` in the same folder. Each request includes response checks: `200` with the documented fields for the `GET`, and `204` for the `POST`.
+In IntelliJ IDEA, open [`get-time-deposits.http`](kotlin/src/test/resources/http/get-time-deposits.http) or [`calculate-balance.http`](kotlin/src/test/resources/http/calculate-balance.http) in `kotlin/src/test/resources/http/`, select the `local` environment, and click ▶ next to a request. `get-time-deposits.http` has one request for all deposits and one for a single page. `baseUrl` is defined in `http-client.env.json` in the same folder.
 
 Stopping the application (`Ctrl+C`) also stops the PostgreSQL container, but keeps it, so the data is still there on the next `bootRun`. Step 2 is only needed once. To start again from an empty database, run `docker compose down` in `kotlin/`.
 

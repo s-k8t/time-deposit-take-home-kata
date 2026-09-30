@@ -91,4 +91,31 @@ internal class GetTimeDepositsIT(
                     JsonCompareMode.STRICT,
                 )
         }
+
+    @Test
+    fun `should return only requested page when get endpoint is called with page and size`() =
+        runTest {
+            // prepare
+            timeDepositRepository.save(createTimeDepositEntity())
+            val secondDeposit = timeDepositRepository.save(createTimeDepositEntity(planType = PlanType.PREMIUM.code))
+
+            // execute
+            val result =
+                webTestClient
+                    .get()
+                    .uri("/v1/deposits?page=1&size=1")
+                    .exchange()
+
+            // verify
+            result
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonPath("$.length()")
+                .isEqualTo(1)
+                .jsonPath("$[0].id")
+                .isEqualTo(secondDeposit.id)
+                .jsonPath("$[0].planType")
+                .isEqualTo("PREMIUM")
+        }
 }

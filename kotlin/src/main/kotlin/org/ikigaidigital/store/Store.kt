@@ -8,6 +8,9 @@ import org.ikigaidigital.store.entity.TimeDepositEntity
 import org.ikigaidigital.store.entity.WithdrawalEntity
 import org.ikigaidigital.store.repository.TimeDepositRepository
 import org.ikigaidigital.store.repository.WithdrawalRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -19,13 +22,18 @@ internal class Store(
 ) : GetAllTimeDepositsDataSource,
     GetTimeDepositsDueForInterestDataSource,
     UpdateTimeDepositBalanceDataSource {
-    override suspend fun fetchAllDeposits(): List<GetAllTimeDepositsDataSource.Output> {
-        val withdrawalsByTimeDepositId = withdrawalRepository.findAll().toList().groupBy { it.timeDepositId }
-        return timeDepositRepository
-            .findAll()
-            .toList()
-            .sortedBy { it.id }
-            .map { it.toOutput(withdrawalsByTimeDepositId[it.id].orEmpty()) }
+    override suspend fun fetchAllDeposits(page: GetAllTimeDepositsDataSource.Page?): List<GetAllTimeDepositsDataSource.Output> {
+        val sortById = Sort.by("id")
+        val pageable = page?.let { PageRequest.of(it.number, it.size, sortById) } ?: Pageable.unpaged(sortById)
+        val timeDeposits = timeDepositRepository.findAllBy(pageable).toList()
+        val withdrawals =
+            when {
+                timeDeposits.isEmpty() -> emptyList()
+                page == null -> withdrawalRepository.findAll().toList()
+                else -> withdrawalRepository.findAllByTimeDepositIdIn(timeDeposits.map { it.id }).toList()
+            }
+        val withdrawalsByTimeDepositId = withdrawals.groupBy { it.timeDepositId }
+        return timeDeposits.map { it.toOutput(withdrawalsByTimeDepositId[it.id].orEmpty()) }
     }
 
     override suspend fun fetchTimeDepositsDueForInterest(periodStart: LocalDate): List<GetTimeDepositsDueForInterestDataSource.Output> =

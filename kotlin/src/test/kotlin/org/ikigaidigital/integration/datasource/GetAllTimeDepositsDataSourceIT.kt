@@ -2,6 +2,7 @@ package org.ikigaidigital.integration.datasource
 
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.ikigaidigital.TestFixtures.createPage
 import org.ikigaidigital.TestFixtures.createTimeDepositEntity
 import org.ikigaidigital.TestFixtures.createTimeDepositOutput
 import org.ikigaidigital.TestFixtures.createWithdrawalEntity
@@ -40,7 +41,7 @@ internal class GetAllTimeDepositsDataSourceIT(
     fun `should return empty list when no time deposits exist`() =
         runTest {
             // execute
-            val result = sut.fetchAllDeposits()
+            val result = sut.fetchAllDeposits(null)
 
             // verify
             assertThat(result).isEmpty()
@@ -84,7 +85,32 @@ internal class GetAllTimeDepositsDataSourceIT(
                 )
 
             // execute
-            val result = sut.fetchAllDeposits()
+            val result = sut.fetchAllDeposits(null)
+
+            // verify
+            assertThat(result).isEqualTo(expected)
+        }
+
+    @Test
+    fun `should return only requested page with its withdrawals when page is given`() =
+        runTest {
+            // prepare
+            val firstDeposit = timeDepositRepository.save(createTimeDepositEntity())
+            val secondDeposit = timeDepositRepository.save(createTimeDepositEntity())
+            val thirdDeposit = timeDepositRepository.save(createTimeDepositEntity())
+            withdrawalRepository.save(createWithdrawalEntity(timeDepositId = firstDeposit.id))
+            withdrawalRepository.save(createWithdrawalEntity(timeDepositId = secondDeposit.id))
+            val thirdDepositWithdrawal = withdrawalRepository.save(createWithdrawalEntity(timeDepositId = thirdDeposit.id))
+            val expected =
+                listOf(
+                    createTimeDepositOutput(
+                        id = thirdDeposit.id,
+                        withdrawals = listOf(createWithdrawalOutput(id = thirdDepositWithdrawal.id)),
+                    ),
+                )
+
+            // execute
+            val result = sut.fetchAllDeposits(createPage(number = 1, size = 2))
 
             // verify
             assertThat(result).isEqualTo(expected)

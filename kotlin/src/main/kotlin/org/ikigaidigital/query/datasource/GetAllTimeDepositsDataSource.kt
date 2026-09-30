@@ -17,5 +17,10 @@ internal interface GetAllTimeDepositsDataSource {
         )
     }
 
-    suspend fun fetchAllDeposits(): List<Output>
+    data class Page(
+        val number: Int,
+        val size: Int,
+    )
+
+    suspend fun fetchAllDeposits(page: Page?): List<Output>
 }

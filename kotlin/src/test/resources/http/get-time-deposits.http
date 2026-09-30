@@ -1,3 +1,7 @@
 ### Get all time deposits
 GET {{baseUrl}}/v1/deposits
 Accept: application/json
+
+### Get one page of time deposits
+GET {{baseUrl}}/v1/deposits?page=0&size=1
+Accept: application/json

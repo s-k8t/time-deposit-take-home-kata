@@ -8,6 +8,7 @@ import org.ikigaidigital.api.model.TimeDepositResponse
 import org.ikigaidigital.query.service.GetTimeDepositsService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -26,5 +27,8 @@ internal class TimeDepositQueryController(
             ),
         ],
     )
-    override suspend fun getAllTimeDeposits(): List<TimeDepositResponse> = getTimeDepositsService.getTimeDeposits()
+    override suspend fun getTimeDeposits(
+        @RequestParam page: Int?,
+        @RequestParam size: Int?,
+    ): List<TimeDepositResponse> = getTimeDepositsService.getTimeDeposits(page, size)
 }

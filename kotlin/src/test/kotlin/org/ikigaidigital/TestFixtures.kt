@@ -13,6 +13,7 @@ import org.ikigaidigital.command.datasource.UpdateTimeDepositBalanceDataSource
 import org.ikigaidigital.extension.roundToCents
 import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource.Output
+import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource.Page
 import org.ikigaidigital.store.entity.TimeDepositEntity
 import org.ikigaidigital.store.entity.WithdrawalEntity
 import java.math.BigDecimal
@@ -75,6 +76,11 @@ internal object TestFixtures {
         startDate: LocalDate = daysAgo(45),
         withdrawals: List<Output.Withdrawal> = listOf(createWithdrawalOutput()),
     ) = Output(id = id, planType = planType, balance = balance, startDate = startDate, withdrawals = withdrawals)
+
+    fun createPage(
+        number: Int = 0,
+        size: Int = 10,
+    ) = Page(number = number, size = size)
 
     fun createWithdrawalOutput(
         id: Int = 1,
