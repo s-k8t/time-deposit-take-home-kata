@@ -3,6 +3,7 @@ package org.ikigaidigital.integration
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.ikigaidigital.TestFixtures.createTimeDepositEntity
+import org.ikigaidigital.TestFixtures.daysAgo
 import org.ikigaidigital.TestcontainersConfiguration
 import org.ikigaidigital.store.repository.TimeDepositRepository
 import org.junit.jupiter.api.AfterEach
@@ -48,7 +49,10 @@ internal class UpdateTimeDepositBalancesIT(
         expectedBalance: BigDecimal,
     ) = runTest {
         // prepare
-        val timeDeposit = timeDepositRepository.save(createTimeDepositEntity(planType = planType, balance = balance, days = days))
+        val timeDeposit =
+            timeDepositRepository.save(
+                createTimeDepositEntity(planType = planType, balance = balance, startDate = daysAgo(days)),
+            )
 
         // execute
         val result =

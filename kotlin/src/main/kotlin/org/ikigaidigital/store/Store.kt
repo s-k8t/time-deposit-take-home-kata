@@ -44,7 +44,7 @@ internal class Store(
             id = id,
             planType = planType,
             balance = balance.toDouble(),
-            days = days,
+            startDate = startDate,
             withdrawals = withdrawals.sortedBy { it.date }.map { it.toOutput() },
         )
 
@@ -60,7 +60,7 @@ internal class Store(
             id = id,
             planType = planType,
             balance = balance.toDouble(),
-            days = days,
+            startDate = startDate,
             version = checkNotNull(version),
         )
 }

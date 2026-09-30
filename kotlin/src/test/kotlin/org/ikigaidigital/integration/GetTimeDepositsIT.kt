@@ -3,6 +3,7 @@ package org.ikigaidigital.integration
 import kotlinx.coroutines.test.runTest
 import org.ikigaidigital.TestFixtures.createTimeDepositEntity
 import org.ikigaidigital.TestFixtures.createWithdrawalEntity
+import org.ikigaidigital.TestFixtures.daysAgo
 import org.ikigaidigital.TestcontainersConfiguration
 import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.store.repository.TimeDepositRepository
@@ -41,7 +42,7 @@ internal class GetTimeDepositsIT(
             val basicDeposit = timeDepositRepository.save(createTimeDepositEntity())
             val premiumDeposit =
                 timeDepositRepository.save(
-                    createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("10000.00"), days = 90),
+                    createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("10000.00"), startDate = daysAgo(90)),
                 )
             val laterWithdrawal = withdrawalRepository.save(createWithdrawalEntity(timeDepositId = basicDeposit.id))
             val earlierWithdrawal =

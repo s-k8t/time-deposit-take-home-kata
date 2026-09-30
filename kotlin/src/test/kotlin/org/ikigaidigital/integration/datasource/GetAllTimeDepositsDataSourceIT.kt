@@ -6,6 +6,7 @@ import org.ikigaidigital.TestFixtures.createTimeDepositEntity
 import org.ikigaidigital.TestFixtures.createTimeDepositOutput
 import org.ikigaidigital.TestFixtures.createWithdrawalEntity
 import org.ikigaidigital.TestFixtures.createWithdrawalOutput
+import org.ikigaidigital.TestFixtures.daysAgo
 import org.ikigaidigital.TestcontainersConfiguration
 import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource
@@ -52,7 +53,7 @@ internal class GetAllTimeDepositsDataSourceIT(
             val basicDeposit = timeDepositRepository.save(createTimeDepositEntity())
             val premiumDeposit =
                 timeDepositRepository.save(
-                    createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("10000.00"), days = 90),
+                    createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("10000.00"), startDate = daysAgo(90)),
                 )
             val laterWithdrawal = withdrawalRepository.save(createWithdrawalEntity(timeDepositId = basicDeposit.id))
             val earlierWithdrawal =
@@ -77,7 +78,7 @@ internal class GetAllTimeDepositsDataSourceIT(
                         id = premiumDeposit.id,
                         planType = PlanType.PREMIUM.code,
                         balance = 10000.00,
-                        days = 90,
+                        startDate = daysAgo(90),
                         withdrawals = emptyList(),
                     ),
                 )

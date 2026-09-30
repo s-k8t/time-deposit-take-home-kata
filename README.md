@@ -111,6 +111,23 @@ HTTP request
 - **Persistence:** R2DBC talks to PostgreSQL with a reactive, non-blocking protocol. Repository results come back as `Flow` and are collected with `toList()`.
 - **The one blocking part:** Flyway runs its migrations over JDBC once, at startup, before the application accepts traffic.
 
+### Database Schema
+
+Flyway migrations in `kotlin/src/main/resources/db/migration` create two tables:
+
+| Table | Columns |
+|---|---|
+| `time_deposits` | `id` (integer, primary key), `plan_type` (varchar), `balance` (decimal 19,2), `start_date` (date, defaults to the current date), `version` (bigint) |
+| `withdrawals` | `id` (integer, primary key), `time_deposit_id` (integer, foreign key to `time_deposits`), `amount` (decimal 19,2), `date` (date), `version` (bigint) |
+
+**Deviation from the brief: `start_date` instead of `days`.** The brief defines a `days` column on `timeDeposits`. A stored day count never changes, so a deposit would never age into or out of an interest rule (for example, premium interest starting after 45 days). The table therefore stores when the deposit started, and `days` is calculated as the number of days from `start_date` to today:
+
+- The `GET` endpoint still returns `days`, so the API contract is unchanged.
+- The balance update calculates `days` the same way before passing each deposit to `TimeDepositCalculator`, so the shared `TimeDeposit` class and the `updateBalance` signature stay unchanged.
+- Migration `V3__replace_days_with_start_date.sql` converts existing data by setting `start_date = CURRENT_DATE - days` before dropping `days`, so every deposit keeps its age.
+
+Column names are snake_case (`plan_type`, `time_deposit_id`, `start_date`), which is the PostgreSQL convention, rather than the brief's camelCase. The `version` columns support optimistic locking for the balance update.
+
 ### API Endpoints
 
 Both endpoints are under `/v1/deposits`, and the OpenAPI contract is generated from the code (see below). Neither endpoint takes parameters or a request body.
@@ -129,7 +146,7 @@ Returns every time deposit, ordered by `id`. An empty database returns `[]`.
 | `id` | integer | Time deposit id |
 | `planType` | string | `BASIC`, `STUDENT`, `PREMIUM`, or `UNDEFINED` for any plan type not recognised in the database |
 | `balance` | number | Current balance |
-| `days` | integer | Age of the deposit in days |
+| `days` | integer | Days since the deposit's start date, calculated on each request (the database stores `start_date`) |
 | `withdrawals` | array | The deposit's withdrawals, ordered by `date`; `[]` if there are none |
 | `withdrawals[].id` | integer | Withdrawal id |
 | `withdrawals[].amount` | number | Withdrawn amount |
@@ -149,7 +166,7 @@ Returns every time deposit, ordered by `id`. An empty database returns `[]`.
 
 #### `POST /v1/deposits/balances`
 
-Recalculates and stores the balance of every time deposit by adding one month of interest, according to its plan:
+Recalculates and stores the balance of every time deposit by adding one month of interest, according to its plan. `days` is the number of days from the deposit's start date to today:
 
 | Plan | Annual rate | Interest is applied when |
 |---|---|---|
@@ -183,8 +200,8 @@ There is no endpoint for creating deposits, and the database starts empty. In a 
 ```bash
 cd kotlin
 docker compose exec -T postgres psql -U time_deposit -d time_deposits <<'SQL'
-INSERT INTO time_deposits (plan_type, days, balance) VALUES
-  ('basic', 45, 1234.56), ('student', 200, 5000.00), ('premium', 90, 10000.00);
+INSERT INTO time_deposits (plan_type, start_date, balance) VALUES
+  ('basic', CURRENT_DATE - 45, 1234.56), ('student', CURRENT_DATE - 200, 5000.00), ('premium', CURRENT_DATE - 90, 10000.00);
 INSERT INTO withdrawals (time_deposit_id, amount, date)
   SELECT id, 100.00, DATE '2026-09-01' FROM time_deposits WHERE plan_type = 'basic';
 SQL

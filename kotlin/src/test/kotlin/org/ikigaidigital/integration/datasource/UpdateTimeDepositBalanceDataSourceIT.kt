@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.ikigaidigital.TestFixtures.createBalanceUpdate
 import org.ikigaidigital.TestFixtures.createTimeDepositEntity
+import org.ikigaidigital.TestFixtures.daysAgo
 import org.ikigaidigital.TestcontainersConfiguration
 import org.ikigaidigital.command.datasource.UpdateTimeDepositBalanceDataSource
 import org.ikigaidigital.model.PlanType
@@ -36,7 +37,7 @@ internal class UpdateTimeDepositBalanceDataSourceIT(
             val basicDeposit = timeDepositRepository.save(createTimeDepositEntity())
             val premiumDeposit =
                 timeDepositRepository.save(
-                    createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("10000.00"), days = 90),
+                    createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("10000.00"), startDate = daysAgo(90)),
                 )
 
             // execute

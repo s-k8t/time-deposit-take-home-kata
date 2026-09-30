@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import org.ikigaidigital.TestFixtures.createBalanceUpdate
 import org.ikigaidigital.TestFixtures.createTimeDeposit
 import org.ikigaidigital.TestFixtures.createTimeDepositToCalculate
+import org.ikigaidigital.TestFixtures.daysAgo
 import org.ikigaidigital.TimeDeposit
 import org.ikigaidigital.TimeDepositCalculator
 import org.ikigaidigital.command.datasource.GetTimeDepositsDataSource
@@ -26,10 +27,10 @@ internal class TimeDepositCommandServiceTest(
     @param:InjectMockKs private val sut: TimeDepositCommandService,
 ) {
     @Test
-    fun `should store balances calculated by time deposit calculator with read versions when time deposits exist`() =
+    fun `should store balances calculated from days since start date with read versions when time deposits exist`() =
         runTest {
             // prepare
-            val timeDeposit = createTimeDepositToCalculate(version = 3)
+            val timeDeposit = createTimeDepositToCalculate(startDate = daysAgo(45), version = 3)
             val calculatedBalance = 1235.59
             coEvery { getTimeDepositsDataSource.fetchTimeDeposits() } returns listOf(timeDeposit)
             every {
@@ -39,7 +40,7 @@ internal class TimeDepositCommandServiceTest(
                             id = timeDeposit.id,
                             planType = timeDeposit.planType,
                             balance = timeDeposit.balance,
-                            days = timeDeposit.days,
+                            days = 45,
                         ),
                     ),
                 )

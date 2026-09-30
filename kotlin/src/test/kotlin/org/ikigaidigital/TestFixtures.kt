@@ -19,6 +19,8 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 internal object TestFixtures {
+    fun daysAgo(days: Int): LocalDate = LocalDate.now().minusDays(days.toLong())
+
     fun createTimeDeposit(
         id: Int = 1,
         planType: String = PlanType.BASIC.code,
@@ -36,9 +38,9 @@ internal object TestFixtures {
         id: Int = 1,
         planType: String = PlanType.BASIC.code,
         balance: Double = 1234.56,
-        days: Int = 45,
+        startDate: LocalDate = daysAgo(45),
         version: Long = 0,
-    ) = GetTimeDepositsDataSource.Output(id = id, planType = planType, balance = balance, days = days, version = version)
+    ) = GetTimeDepositsDataSource.Output(id = id, planType = planType, balance = balance, startDate = startDate, version = version)
 
     fun createBalanceUpdate(
         id: Int = 1,
@@ -49,8 +51,8 @@ internal object TestFixtures {
     fun createTimeDepositEntity(
         planType: String = PlanType.BASIC.code,
         balance: BigDecimal = BigDecimal("1234.56"),
-        days: Int = 45,
-    ) = TimeDepositEntity(planType = planType, days = days, balance = balance)
+        startDate: LocalDate = daysAgo(45),
+    ) = TimeDepositEntity(planType = planType, startDate = startDate, balance = balance)
 
     fun createWithdrawalEntity(
         timeDepositId: Int,
@@ -62,9 +64,9 @@ internal object TestFixtures {
         id: Int = 1,
         planType: String = PlanType.BASIC.code,
         balance: Double = 1234.56,
-        days: Int = 45,
+        startDate: LocalDate = daysAgo(45),
         withdrawals: List<Output.Withdrawal> = listOf(createWithdrawalOutput()),
-    ) = Output(id = id, planType = planType, balance = balance, days = days, withdrawals = withdrawals)
+    ) = Output(id = id, planType = planType, balance = balance, startDate = startDate, withdrawals = withdrawals)
 
     fun createWithdrawalOutput(
         id: Int = 1,

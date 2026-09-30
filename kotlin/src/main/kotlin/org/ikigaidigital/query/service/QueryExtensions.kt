@@ -8,15 +8,17 @@ import org.ikigaidigital.api.model.TimeDepositResponse
 import org.ikigaidigital.api.model.WithdrawalDate
 import org.ikigaidigital.api.model.WithdrawalId
 import org.ikigaidigital.api.model.WithdrawalResponse
+import org.ikigaidigital.extension.daysUntil
 import org.ikigaidigital.model.PlanType
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource
+import java.time.LocalDate
 
-internal fun GetAllTimeDepositsDataSource.Output.toResponse() =
+internal fun GetAllTimeDepositsDataSource.Output.toResponse(today: LocalDate) =
     TimeDepositResponse(
         id = TimeDepositId(id),
         planType = PlanType.fromString(planType).toPlanTypeName(),
         balance = Amount(balance),
-        days = Day(days),
+        days = Day(startDate.daysUntil(today)),
         withdrawals = withdrawals.map { it.toResponse() },
     )
 

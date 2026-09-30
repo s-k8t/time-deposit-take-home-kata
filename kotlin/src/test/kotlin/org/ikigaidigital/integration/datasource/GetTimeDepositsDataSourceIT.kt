@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.ikigaidigital.TestFixtures.createTimeDepositEntity
 import org.ikigaidigital.TestFixtures.createTimeDepositToCalculate
 import org.ikigaidigital.TestFixtures.createWithdrawalEntity
+import org.ikigaidigital.TestFixtures.daysAgo
 import org.ikigaidigital.TestcontainersConfiguration
 import org.ikigaidigital.command.datasource.GetTimeDepositsDataSource
 import org.ikigaidigital.model.PlanType
@@ -50,8 +51,9 @@ internal class GetTimeDepositsDataSourceIT(
             val basicDeposit = timeDepositRepository.save(createTimeDepositEntity())
             val premiumDeposit =
                 timeDepositRepository
-                    .save(createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("9000.00"), days = 90))
-                    .let { timeDepositRepository.save(it.copy(balance = BigDecimal("10000.00"))) }
+                    .save(
+                        createTimeDepositEntity(planType = PlanType.PREMIUM.code, balance = BigDecimal("9000.00"), startDate = daysAgo(90)),
+                    ).let { timeDepositRepository.save(it.copy(balance = BigDecimal("10000.00"))) }
             withdrawalRepository.save(createWithdrawalEntity(timeDepositId = basicDeposit.id))
             val expected =
                 listOf(
@@ -60,7 +62,7 @@ internal class GetTimeDepositsDataSourceIT(
                         id = premiumDeposit.id,
                         planType = PlanType.PREMIUM.code,
                         balance = 10000.00,
-                        days = 90,
+                        startDate = daysAgo(90),
                         version = premiumDeposit.version!!,
                     ),
                 )

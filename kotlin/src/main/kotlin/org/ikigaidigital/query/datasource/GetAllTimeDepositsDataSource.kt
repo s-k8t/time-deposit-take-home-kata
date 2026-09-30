@@ -7,7 +7,7 @@ internal interface GetAllTimeDepositsDataSource {
         val id: Int,
         val planType: String,
         val balance: Double,
-        val days: Int,
+        val startDate: LocalDate,
         val withdrawals: List<Withdrawal>,
     ) {
         data class Withdrawal(
