@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @SpringBootTest
 @AutoConfigureWebTestClient
@@ -42,7 +43,7 @@ internal class UpdateTimeDepositBalancesIT(
         "premium, 46, 10000.00, 10041.67",
         "other, 100, 500.00, 500.00",
     )
-    fun `should store balance with monthly interest applied when balances endpoint is called`(
+    fun `should store balance with monthly interest applied and today as last interest date when balances endpoint is called`(
         planType: String,
         days: Int,
         balance: BigDecimal,
@@ -63,8 +64,36 @@ internal class UpdateTimeDepositBalancesIT(
 
         // verify
         result.expectStatus().isNoContent
-        assertThat(timeDepositRepository.findById(timeDeposit.id)!!.balance).isEqualByComparingTo(expectedBalance)
+        val updatedTimeDeposit = timeDepositRepository.findById(timeDeposit.id)!!
+        assertThat(updatedTimeDeposit.balance).isEqualByComparingTo(expectedBalance)
+        assertThat(updatedTimeDeposit.lastInterestDate).isEqualTo(LocalDate.now())
     }
+
+    @Test
+    fun `should apply interest only once when balances endpoint is called twice in the same month`() =
+        runTest {
+            // prepare
+            val timeDeposit = timeDepositRepository.save(createTimeDepositEntity())
+
+            // execute
+            val firstResult =
+                webTestClient
+                    .post()
+                    .uri("/v1/deposits/balances")
+                    .exchange()
+            val secondResult =
+                webTestClient
+                    .post()
+                    .uri("/v1/deposits/balances")
+                    .exchange()
+
+            // verify
+            firstResult.expectStatus().isNoContent
+            secondResult.expectStatus().isNoContent
+            val updatedTimeDeposit = timeDepositRepository.findById(timeDeposit.id)!!
+            assertThat(updatedTimeDeposit.balance).isEqualByComparingTo(BigDecimal("1235.59"))
+            assertThat(updatedTimeDeposit.version).isEqualTo(timeDeposit.version!! + 1)
+        }
 
     @Test
     fun `should keep all balances unchanged when storing any calculated balance fails`() =

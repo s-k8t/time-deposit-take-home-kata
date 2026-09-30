@@ -1,0 +1,3 @@
+### Get all time deposits
+GET {{baseUrl}}/v1/deposits
+Accept: application/json

@@ -13,6 +13,7 @@ data class TimeDepositEntity(
     val planType: String,
     val startDate: LocalDate,
     val balance: BigDecimal,
+    val lastInterestDate: LocalDate? = null,
     @Version
     val version: Long? = null,
 )

@@ -1,7 +1,7 @@
 package org.ikigaidigital.store
 
 import kotlinx.coroutines.flow.toList
-import org.ikigaidigital.command.datasource.GetTimeDepositsDataSource
+import org.ikigaidigital.command.datasource.GetTimeDepositsDueForInterestDataSource
 import org.ikigaidigital.command.datasource.UpdateTimeDepositBalanceDataSource
 import org.ikigaidigital.query.datasource.GetAllTimeDepositsDataSource
 import org.ikigaidigital.store.entity.TimeDepositEntity
@@ -10,13 +10,14 @@ import org.ikigaidigital.store.repository.TimeDepositRepository
 import org.ikigaidigital.store.repository.WithdrawalRepository
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @Component
 internal class Store(
     private val timeDepositRepository: TimeDepositRepository,
     private val withdrawalRepository: WithdrawalRepository,
 ) : GetAllTimeDepositsDataSource,
-    GetTimeDepositsDataSource,
+    GetTimeDepositsDueForInterestDataSource,
     UpdateTimeDepositBalanceDataSource {
     override suspend fun fetchAllDeposits(): List<GetAllTimeDepositsDataSource.Output> {
         val withdrawalsByTimeDepositId = withdrawalRepository.findAll().toList().groupBy { it.timeDepositId }
@@ -27,15 +28,15 @@ internal class Store(
             .map { it.toOutput(withdrawalsByTimeDepositId[it.id].orEmpty()) }
     }
 
-    override suspend fun fetchTimeDeposits(): List<GetTimeDepositsDataSource.Output> =
+    override suspend fun fetchTimeDepositsDueForInterest(periodStart: LocalDate): List<GetTimeDepositsDueForInterestDataSource.Output> =
         timeDepositRepository
-            .findAll()
+            .findAllDueForInterest(periodStart)
             .toList()
             .map { it.toTimeDepositOutput() }
 
     override suspend fun updateBalances(inputs: List<UpdateTimeDepositBalanceDataSource.Input>) {
         inputs.forEach { input ->
-            timeDepositRepository.updateBalance(input.id, BigDecimal.valueOf(input.balance), input.version)
+            timeDepositRepository.updateBalance(input.id, BigDecimal.valueOf(input.balance), input.lastInterestDate, input.version)
         }
     }
 
@@ -56,7 +57,7 @@ internal class Store(
         )
 
     private fun TimeDepositEntity.toTimeDepositOutput() =
-        GetTimeDepositsDataSource.Output(
+        GetTimeDepositsDueForInterestDataSource.Output(
             id = id,
             planType = planType,
             balance = balance.toDouble(),

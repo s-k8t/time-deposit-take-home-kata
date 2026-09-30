@@ -2,7 +2,7 @@ package org.ikigaidigital.command.datasource
 
 import java.time.LocalDate
 
-internal interface GetTimeDepositsDataSource {
+internal interface GetTimeDepositsDueForInterestDataSource {
     data class Output(
         val id: Int,
         val planType: String,
@@ -11,5 +11,5 @@ internal interface GetTimeDepositsDataSource {
         val version: Long,
     )
 
-    suspend fun fetchTimeDeposits(): List<Output>
+    suspend fun fetchTimeDepositsDueForInterest(periodStart: LocalDate): List<Output>
 }

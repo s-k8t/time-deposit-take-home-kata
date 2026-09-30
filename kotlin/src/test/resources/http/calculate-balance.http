@@ -1,0 +1,2 @@
+### Update all balances (applies interest at most once per calendar month)
+POST {{baseUrl}}/v1/deposits/balances

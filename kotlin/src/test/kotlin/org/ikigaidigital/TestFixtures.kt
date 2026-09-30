@@ -8,7 +8,7 @@ import org.ikigaidigital.api.model.TimeDepositResponse
 import org.ikigaidigital.api.model.WithdrawalDate
 import org.ikigaidigital.api.model.WithdrawalId
 import org.ikigaidigital.api.model.WithdrawalResponse
-import org.ikigaidigital.command.datasource.GetTimeDepositsDataSource
+import org.ikigaidigital.command.datasource.GetTimeDepositsDueForInterestDataSource
 import org.ikigaidigital.command.datasource.UpdateTimeDepositBalanceDataSource
 import org.ikigaidigital.extension.roundToCents
 import org.ikigaidigital.model.PlanType
@@ -40,19 +40,27 @@ internal object TestFixtures {
         balance: Double = 1234.56,
         startDate: LocalDate = daysAgo(45),
         version: Long = 0,
-    ) = GetTimeDepositsDataSource.Output(id = id, planType = planType, balance = balance, startDate = startDate, version = version)
+    ) = GetTimeDepositsDueForInterestDataSource.Output(
+        id = id,
+        planType = planType,
+        balance = balance,
+        startDate = startDate,
+        version = version,
+    )
 
     fun createBalanceUpdate(
         id: Int = 1,
         balance: Double = 1234.56,
         version: Long = 0,
-    ) = UpdateTimeDepositBalanceDataSource.Input(id = id, balance = balance, version = version)
+        lastInterestDate: LocalDate = LocalDate.now(),
+    ) = UpdateTimeDepositBalanceDataSource.Input(id = id, balance = balance, version = version, lastInterestDate = lastInterestDate)
 
     fun createTimeDepositEntity(
         planType: String = PlanType.BASIC.code,
         balance: BigDecimal = BigDecimal("1234.56"),
         startDate: LocalDate = daysAgo(45),
-    ) = TimeDepositEntity(planType = planType, startDate = startDate, balance = balance)
+        lastInterestDate: LocalDate? = null,
+    ) = TimeDepositEntity(planType = planType, startDate = startDate, balance = balance, lastInterestDate = lastInterestDate)
 
     fun createWithdrawalEntity(
         timeDepositId: Int,

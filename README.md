@@ -117,7 +117,7 @@ Flyway migrations in `kotlin/src/main/resources/db/migration` create two tables:
 
 | Table | Columns |
 |---|---|
-| `time_deposits` | `id` (integer, primary key), `plan_type` (varchar), `balance` (decimal 19,2), `start_date` (date, defaults to the current date), `version` (bigint) |
+| `time_deposits` | `id` (integer, primary key), `plan_type` (varchar), `balance` (decimal 19,2), `start_date` (date, defaults to the current date), `last_interest_date` (date, `NULL` until interest is first applied), `version` (bigint) |
 | `withdrawals` | `id` (integer, primary key), `time_deposit_id` (integer, foreign key to `time_deposits`), `amount` (decimal 19,2), `date` (date), `version` (bigint) |
 
 **Deviation from the brief: `start_date` instead of `days`.** The brief defines a `days` column on `timeDeposits`. A stored day count never changes, so a deposit would never age into or out of an interest rule (for example, premium interest starting after 45 days). The table therefore stores when the deposit started, and `days` is calculated as the number of days from `start_date` to today:
@@ -177,7 +177,7 @@ Recalculates and stores the balance of every time deposit by adding one month of
 
 Monthly interest is `balance × annual rate / 12`, rounded half-up to cents.
 
-- **Not idempotent:** every call applies another month of interest. That's why it's a `POST`.
+- **Once per month:** only deposits not yet credited in the current calendar month are processed, meaning `last_interest_date` is `NULL` or before the 1st of the month. Each processed deposit, including those that earned no interest, gets `last_interest_date` set to today. Calling the endpoint again in the same month changes nothing, and a deposit that missed an earlier month is picked up by the next run. `last_interest_date` is stored only and isn't part of the `GET` response.
 - **Concurrent changes are never overwritten:** each deposit is updated only if it still has the version read at the start of the calculation. A deposit modified in the meantime keeps that change and is skipped in this run.
 
 ### Calling the Endpoints via Swagger
@@ -227,7 +227,7 @@ SQL
 
 **5. Update all balances:** expand **`POST /v1/deposits/balances`**, click **Try it out**, then **Execute**. It takes no request body and returns `204 No Content`. One month of interest is applied to every eligible deposit, in a single transaction.
 
-**6. Check the result:** execute `GET /v1/deposits` again. The balances are now `1235.59` (basic), `5012.5` (student) and `10041.67` (premium). Each further `POST` applies another month of interest.
+**6. Check the result:** execute `GET /v1/deposits` again. The balances are now `1235.59` (basic), `5012.5` (student) and `10041.67` (premium). Another `POST` in the same month changes nothing, because every deposit has already been credited this month.
 
 The same calls without Swagger:
 
@@ -235,6 +235,8 @@ The same calls without Swagger:
 curl http://localhost:8080/v1/deposits
 curl -X POST http://localhost:8080/v1/deposits/balances
 ```
+
+In IntelliJ IDEA, open [`get-time-deposits.http`](kotlin/src/test/resources/http/get-time-deposits.http) or [`calculate-balance.http`](kotlin/src/test/resources/http/calculate-balance.http) in `kotlin/src/test/resources/http/`, select the `local` environment, and click ▶ next to the request. `baseUrl` is defined in `http-client.env.json` in the same folder. Each request includes response checks: `200` with the documented fields for the `GET`, and `204` for the `POST`.
 
 Stopping the application (`Ctrl+C`) also stops the PostgreSQL container, but keeps it, so the data is still there on the next `bootRun`. Step 2 is only needed once. To start again from an empty database, run `docker compose down` in `kotlin/`.
 

@@ -14,25 +14,27 @@ import org.ikigaidigital.TestFixtures.createTimeDepositToCalculate
 import org.ikigaidigital.TestFixtures.daysAgo
 import org.ikigaidigital.TimeDeposit
 import org.ikigaidigital.TimeDepositCalculator
-import org.ikigaidigital.command.datasource.GetTimeDepositsDataSource
+import org.ikigaidigital.command.datasource.GetTimeDepositsDueForInterestDataSource
 import org.ikigaidigital.command.datasource.UpdateTimeDepositBalanceDataSource
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
 internal class TimeDepositCommandServiceTest(
-    @param:MockK private val getTimeDepositsDataSource: GetTimeDepositsDataSource,
+    @param:MockK private val getTimeDepositsDueForInterestDataSource: GetTimeDepositsDueForInterestDataSource,
     @param:MockK private val updateTimeDepositBalanceDataSource: UpdateTimeDepositBalanceDataSource,
     @param:MockK private val timeDepositCalculator: TimeDepositCalculator,
     @param:InjectMockKs private val sut: TimeDepositCommandService,
 ) {
     @Test
-    fun `should store balances calculated from days since start date with read versions when time deposits exist`() =
+    fun `should store calculated balances with read versions and today as last interest date when time deposits are due for interest`() =
         runTest {
             // prepare
             val timeDeposit = createTimeDepositToCalculate(startDate = daysAgo(45), version = 3)
             val calculatedBalance = 1235.59
-            coEvery { getTimeDepositsDataSource.fetchTimeDeposits() } returns listOf(timeDeposit)
+            coEvery { getTimeDepositsDueForInterestDataSource.fetchTimeDepositsDueForInterest(LocalDate.now().withDayOfMonth(1)) } returns
+                listOf(timeDeposit)
             every {
                 timeDepositCalculator.updateBalance(
                     listOf(
@@ -53,16 +55,24 @@ internal class TimeDepositCommandServiceTest(
             // verify
             coVerify(exactly = 1) {
                 updateTimeDepositBalanceDataSource.updateBalances(
-                    listOf(createBalanceUpdate(id = timeDeposit.id, balance = calculatedBalance, version = timeDeposit.version)),
+                    listOf(
+                        createBalanceUpdate(
+                            id = timeDeposit.id,
+                            balance = calculatedBalance,
+                            version = timeDeposit.version,
+                            lastInterestDate = LocalDate.now(),
+                        ),
+                    ),
                 )
             }
         }
 
     @Test
-    fun `should store no balances when no time deposits exist`() =
+    fun `should store no balances when no time deposits are due for interest`() =
         runTest {
             // prepare
-            coEvery { getTimeDepositsDataSource.fetchTimeDeposits() } returns emptyList()
+            coEvery { getTimeDepositsDueForInterestDataSource.fetchTimeDepositsDueForInterest(LocalDate.now().withDayOfMonth(1)) } returns
+                emptyList()
             every { timeDepositCalculator.updateBalance(emptyList()) } returns Unit
             coJustRun { updateTimeDepositBalanceDataSource.updateBalances(any()) }
 

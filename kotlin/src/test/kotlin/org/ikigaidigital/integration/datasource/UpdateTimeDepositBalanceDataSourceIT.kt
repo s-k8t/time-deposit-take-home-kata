@@ -31,7 +31,7 @@ internal class UpdateTimeDepositBalanceDataSourceIT(
         }
 
     @Test
-    fun `should store new balance and increment version when balance update is given`() =
+    fun `should store new balance and last interest date and increment version when balance update is given`() =
         runTest {
             // prepare
             val basicDeposit = timeDepositRepository.save(createTimeDepositEntity())
@@ -41,12 +41,22 @@ internal class UpdateTimeDepositBalanceDataSourceIT(
                 )
 
             // execute
-            sut.updateBalances(listOf(createBalanceUpdate(id = basicDeposit.id, balance = 1235.59, version = basicDeposit.version!!)))
+            sut.updateBalances(
+                listOf(
+                    createBalanceUpdate(
+                        id = basicDeposit.id,
+                        balance = 1235.59,
+                        version = basicDeposit.version!!,
+                        lastInterestDate = daysAgo(1),
+                    ),
+                ),
+            )
 
             // verify
             val updatedBasicDeposit = timeDepositRepository.findById(basicDeposit.id)!!
             val untouchedPremiumDeposit = timeDepositRepository.findById(premiumDeposit.id)!!
             assertThat(updatedBasicDeposit.balance).isEqualByComparingTo(BigDecimal("1235.59"))
+            assertThat(updatedBasicDeposit.lastInterestDate).isEqualTo(daysAgo(1))
             assertThat(updatedBasicDeposit.version).isEqualTo(basicDeposit.version + 1)
             assertThat(untouchedPremiumDeposit).isEqualTo(premiumDeposit)
         }
